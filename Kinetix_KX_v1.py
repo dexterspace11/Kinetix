@@ -16,7 +16,7 @@ with open("abi.json") as f:
     abi = json.load(f)
 
 # Contract setup
-contract_address = Web3.to_checksum_address("YOUR_CONTRACT_ADDRESS_HERE")
+contract_address = Web3.to_checksum_address("0xEDC2F9dCdeE3BBdd7bDbEad04c3E0cEdf165b39b")
 contract = web3.eth.contract(address=contract_address, abi=abi)
 
 # User wallet
