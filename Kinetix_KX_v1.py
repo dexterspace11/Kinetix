@@ -1,142 +1,84 @@
 import streamlit as st
 from web3 import Web3
 import json
-import os
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
-PRIVATE_KEY = os.getenv("PRIVATE_KEY")
-PUBLIC_KEY = Web3.to_checksum_address(os.getenv("PUBLIC_KEY"))
+st.set_page_config(page_title="Kinetix dApp", layout="centered")
 
-# Setup Web3
-infura_url = "https://sepolia.infura.io/v3/e0fcce634506410b87fc31064eed915a"
-web3 = Web3(Web3.HTTPProvider(infura_url))
+# Connect to local Ethereum node or Infura
+w3 = Web3(Web3.HTTPProvider("https://mainnet.infura.io/v3/e0fcce634506410b87fc31064eed915a"))
 
-# Load contract ABI
-with open('abi.json') as f:
+# Replace with your deployed contract address and ABI
+contract_address = "0xEDC2F9dCdeE3BBdd7bDbEad04c3E0cEdf165b39b"
+with open("KinetixABI.json") as f:
     abi = json.load(f)
 
-contract_address = Web3.to_checksum_address("0xEDC2F9dCdeE3BBdd7bDbEad04c3E0cEdf165b39b")
-contract = web3.eth.contract(address=contract_address, abi=abi)
+contract = w3.eth.contract(address=contract_address, abi=abi)
 
-# Streamlit UI
-st.set_page_config(page_title="Kinetix dApp", layout="centered")
-st.title("🚀 Kinetix Token dApp")
+# Login
+st.title("🔗 Kinetix dApp")
+st.subheader("Login")
+private_key = st.text_input("Enter your private key", type="password")
+account = w3.eth.account.from_key(private_key) if private_key else None
+if account:
+    st.success(f"Logged in as {account.address}")
 
-wallet_address = st.text_input("Enter your wallet address")
+    # ETH Price
+    if st.button("Get ETH Price"):
+        eth_price = contract.functions.getEthPrice().call()
+        st.write(f"📈 ETH Price: {w3.fromWei(eth_price, 'ether')} USD")
 
-if wallet_address:
-    try:
-        wallet_address = Web3.to_checksum_address(wallet_address)
-    except Exception as e:
-        st.error("Invalid wallet address format.")
-    else:
-        st.subheader("🔍 Query Functions")
+    # Buy
+    st.subheader("Buy ETH with Kinetix")
+    eth_to_send = st.number_input("ETH to Buy", min_value=0.001, value=0.01)
+    if st.button("Buy"):
+        tx = contract.functions.buy().build_transaction({
+            "from": account.address,
+            "value": w3.toWei(eth_to_send, "ether"),
+            "nonce": w3.eth.get_transaction_count(account.address),
+            "gas": 300000,
+            "gasPrice": w3.eth.gas_price,
+        })
+        signed_tx = w3.eth.account.sign_transaction(tx, private_key=private_key)
+        tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+        st.success(f"Buy transaction sent: {tx_hash.hex()}")
 
-        if st.button("Get ETH Price"):
-            try:
-                eth_price = contract.functions.getEthPrice().call()
-                st.success(f"ETH Price: {eth_price}")
-            except Exception as e:
-                st.error(str(e))
+    # Manual Sell
+    if st.button("Manual Sell"):
+        tx = contract.functions.manualSell().build_transaction({
+            "from": account.address,
+            "nonce": w3.eth.get_transaction_count(account.address),
+            "gas": 300000,
+            "gasPrice": w3.eth.gas_price,
+        })
+        signed_tx = w3.eth.account.sign_transaction(tx, private_key=private_key)
+        tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+        st.success(f"Sell transaction sent: {tx_hash.hex()}")
 
-        if st.button("Get Sell Target Price"):
-            try:
-                target_price = contract.functions.getSellTargetPrice(wallet_address).call()
-                st.success(f"Sell Target Price: {target_price}")
-            except Exception as e:
-                st.error(str(e))
+    # Get My Positions
+    if st.button("View My Positions"):
+        positions = contract.functions.getMyPositions().call({'from': account.address})
+        for idx, pos in enumerate(positions):
+            st.write(f"Position {idx}: EntryPrice={pos[0]}, Amount={w3.fromWei(pos[1], 'ether')} ETH, Sold={pos[2]}")
 
-        if st.button("Get My Positions"):
-            try:
-                positions = contract.functions.getMyPositions().call({'from': wallet_address})
-                st.json(positions)
-            except Exception as e:
-                st.error(str(e))
+    # Get Sell Target Price
+    if st.button("Get Sell Target Price"):
+        price = contract.functions.getSellTargetPrice(account.address).call()
+        st.write(f"📊 Sell Target Price: {w3.fromWei(price, 'ether')} USD")
 
-        if st.button("Get Position Count"):
-            try:
-                count = contract.functions.getPositionCount(wallet_address).call()
-                st.success(f"Total Positions: {count}")
-            except Exception as e:
-                st.error(str(e))
+    # Token Balance
+    if st.button("Check Kinetix Token Balance"):
+        balance = contract.functions.balanceOf(account.address).call()
+        st.write(f"💰 Token Balance: {w3.fromWei(balance, 'ether')} KX")
 
-        st.subheader("🛠️ Write Functions")
-
-        # Buy Function
-        eth_value = st.text_input("Amount of ETH to send (in wei)", "10000000000000000")  # 0.01 ETH
-        if st.button("Buy"):
-            try:
-                nonce = web3.eth.get_transaction_count(PUBLIC_KEY)
-                txn = contract.functions.buy().build_transaction({
-                    'from': PUBLIC_KEY,
-                    'value': int(eth_value),
-                    'gas': 200000,
-                    'gasPrice': web3.to_wei('50', 'gwei'),
-                    'nonce': nonce
-                })
-                signed_txn = web3.eth.account.sign_transaction(txn, private_key=PRIVATE_KEY)
-                tx_hash = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
-                st.success(f"Buy transaction sent! TX Hash: {tx_hash.hex()}")
-            except Exception as e:
-                st.error(str(e))
-
-        # Manual Sell Function
-        if st.button("Manual Sell"):
-            try:
-                nonce = web3.eth.get_transaction_count(PUBLIC_KEY)
-                txn = contract.functions.manualSell().build_transaction({
-                    'from': PUBLIC_KEY,
-                    'gas': 200000,
-                    'gasPrice': web3.to_wei('50', 'gwei'),
-                    'nonce': nonce
-                })
-                signed_txn = web3.eth.account.sign_transaction(txn, private_key=PRIVATE_KEY)
-                tx_hash = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
-                st.success(f"Manual sell transaction sent! TX Hash: {tx_hash.hex()}")
-            except Exception as e:
-                st.error(str(e))
-
-        # Withdraw Function
-        position_id = st.text_input("Position ID to withdraw", "0")
-        if st.button("Withdraw"):
-            try:
-                nonce = web3.eth.get_transaction_count(PUBLIC_KEY)
-                txn = contract.functions.withdraw(int(position_id)).build_transaction({
-                    'from': PUBLIC_KEY,
-                    'gas': 200000,
-                    'gasPrice': web3.to_wei('50', 'gwei'),
-                    'nonce': nonce
-                })
-                signed_txn = web3.eth.account.sign_transaction(txn, private_key=PRIVATE_KEY)
-                tx_hash = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
-                st.success(f"Withdraw transaction sent! TX Hash: {tx_hash.hex()}")
-            except Exception as e:
-                st.error(str(e))
-
-        # CheckUpkeep and PerformUpkeep
-        st.write("📡 Chainlink Automation")
-        calldata = st.text_input("Calldata (hex)", "0x")
-        
-        if st.button("Check Upkeep"):
-            try:
-                upkeep_needed, _ = contract.functions.checkUpkeep(calldata).call()
-                st.success(f"Upkeep Needed: {upkeep_needed}")
-            except Exception as e:
-                st.error(str(e))
-
-        if st.button("Perform Upkeep"):
-            try:
-                nonce = web3.eth.get_transaction_count(PUBLIC_KEY)
-                txn = contract.functions.performUpkeep(calldata).build_transaction({
-                    'from': PUBLIC_KEY,
-                    'gas': 250000,
-                    'gasPrice': web3.to_wei('50', 'gwei'),
-                    'nonce': nonce
-                })
-                signed_txn = web3.eth.account.sign_transaction(txn, private_key=PRIVATE_KEY)
-                tx_hash = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
-                st.success(f"Perform upkeep transaction sent! TX Hash: {tx_hash.hex()}")
-            except Exception as e:
-                st.error(str(e))
+    # Withdraw
+    position_id = st.number_input("Position ID to withdraw", min_value=0, step=1)
+    if st.button("Withdraw"):
+        tx = contract.functions.withdraw(position_id).build_transaction({
+            "from": account.address,
+            "nonce": w3.eth.get_transaction_count(account.address),
+            "gas": 300000,
+            "gasPrice": w3.eth.gas_price,
+        })
+        signed_tx = w3.eth.account.sign_transaction(tx, private_key=private_key)
+        tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+        st.success(f"Withdraw transaction sent: {tx_hash.hex()}")
