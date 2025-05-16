@@ -40,7 +40,7 @@ if account:
                 "gasPrice": w3.eth.gas_price,
             })
             signed_tx = w3.eth.account.sign_transaction(tx, private_key=private_key)
-            tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)  # Corrected attribute
             st.success(f"Buy transaction sent: {tx_hash.hex()}")
         except Exception as e:
             st.error(f"An error occurred: {e}")
@@ -55,7 +55,7 @@ if account:
                 "gasPrice": w3.eth.gas_price,
             })
             signed_tx = w3.eth.account.sign_transaction(tx, private_key=private_key)
-            tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)  # Corrected attribute
             st.success(f"Sell transaction sent: {tx_hash.hex()}")
         except Exception as e:
             st.error(f"An error occurred: {e}")
@@ -96,7 +96,7 @@ if account:
                 "gasPrice": w3.eth.gas_price,
             })
             signed_tx = w3.eth.account.sign_transaction(tx, private_key=private_key)
-            tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)  # Corrected attribute
             st.success(f"Withdraw transaction sent: {tx_hash.hex()}")
         except Exception as e:
             st.error(f"An error occurred: {e}")
