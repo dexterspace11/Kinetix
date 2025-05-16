@@ -7,14 +7,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Set up Web3
-infura_url = f"https://sepolia.infura.io/v3/{os.getenv('INFURA_PROJECT_ID')}"
+infura_url = f"https://sepolia.infura.io/v3/e0fcce634506410b87fc31064eed915a"
 web3 = Web3(Web3.HTTPProvider(infura_url))
 
 # Load contract ABI and address
 with open('abi.json') as f:
     abi = json.load(f)
 
-contract_address = Web3.to_checksum_address(os.getenv("CONTRACT_ADDRESS"))
+contract_address = Web3.to_checksum_address(os.getenv("0xEDC2F9dCdeE3BBdd7bDbEad04c3E0cEdf165b39b"))
 contract = web3.eth.contract(address=contract_address, abi=abi)
 
 st.set_page_config(page_title="Kinetix dApp", layout="centered")
