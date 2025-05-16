@@ -5,10 +5,10 @@ import json
 st.set_page_config(page_title="Kinetix dApp", layout="centered")
 
 # Connect to local Ethereum node or Infura
-w3 = Web3(Web3.HTTPProvider("https://mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID"))
+w3 = Web3(Web3.HTTPProvider("https://sepolia.infura.io/v3/e0fcce634506410b87fc31064eed915a"))
 
 # Replace with your deployed contract address and ABI
-contract_address = "0xYourContractAddress"
+contract_address = "0xEDC2F9dCdeE3BBdd7bDbEad04c3E0cEdf165b39b"
 with open("KinetixABI.json") as f:
     abi = json.load(f)
 
