@@ -4,10 +4,10 @@ import json
 
 st.set_page_config(page_title="Kinetix dApp", layout="centered")
 
-# Connect to local Ethereum node or Infura
+# Connect to Ethereum node
 w3 = Web3(Web3.HTTPProvider("https://sepolia.infura.io/v3/e0fcce634506410b87fc31064eed915a"))
 
-# Replace with your deployed contract address and ABI
+# Load contract
 contract_address = "0xEDC2F9dCdeE3BBdd7bDbEad04c3E0cEdf165b39b"
 with open("KinetixABI.json") as f:
     abi = json.load(f)
@@ -25,7 +25,7 @@ if account:
     # ETH Price
     if st.button("Get ETH Price"):
         eth_price = contract.functions.getEthPrice().call()
-        st.write(f"📈 ETH Price: {w3.fromWei(eth_price, 'ether')} USD")
+        st.write(f"📈 ETH Price: {Web3.fromWei(eth_price, 'ether')} USD")
 
     # Buy
     st.subheader("Buy ETH with Kinetix")
@@ -58,17 +58,17 @@ if account:
     if st.button("View My Positions"):
         positions = contract.functions.getMyPositions().call({'from': account.address})
         for idx, pos in enumerate(positions):
-            st.write(f"Position {idx}: EntryPrice={pos[0]}, Amount={w3.fromWei(pos[1], 'ether')} ETH, Sold={pos[2]}")
+            st.write(f"Position {idx}: EntryPrice={pos[0]}, Amount={Web3.fromWei(pos[1], 'ether')} ETH, Sold={pos[2]}")
 
     # Get Sell Target Price
     if st.button("Get Sell Target Price"):
         price = contract.functions.getSellTargetPrice(account.address).call()
-        st.write(f"📊 Sell Target Price: {w3.fromWei(price, 'ether')} USD")
+        st.write(f"📊 Sell Target Price: {Web3.fromWei(price, 'ether')} USD")
 
     # Token Balance
     if st.button("Check Kinetix Token Balance"):
         balance = contract.functions.balanceOf(account.address).call()
-        st.write(f"💰 Token Balance: {w3.fromWei(balance, 'ether')} KX")
+        st.write(f"💰 Token Balance: {Web3.fromWei(balance, 'ether')} KX")
 
     # Withdraw
     position_id = st.number_input("Position ID to withdraw", min_value=0, step=1)
