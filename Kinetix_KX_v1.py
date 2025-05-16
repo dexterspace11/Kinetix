@@ -25,7 +25,7 @@ if account:
     # ETH Price
     if st.button("Get ETH Price"):
         eth_price = contract.functions.getEthPrice().call()
-        st.write(f"📈 ETH Price: {w3.fromWei(eth_price, 'ether')} USD")
+        st.write(f"📈 ETH Price: {Web3.from_wei(eth_price, 'ether')} USD")
 
     # Buy
     st.subheader("Buy ETH with Kinetix")
@@ -33,7 +33,7 @@ if account:
     if st.button("Buy"):
         tx = contract.functions.buy().build_transaction({
             "from": account.address,
-            "value": w3.toWei(eth_to_send, "ether"),
+            "value": Web3.to_wei(eth_to_send, "ether"),
             "nonce": w3.eth.get_transaction_count(account.address),
             "gas": 300000,
             "gasPrice": w3.eth.gas_price,
@@ -58,17 +58,17 @@ if account:
     if st.button("View My Positions"):
         positions = contract.functions.getMyPositions().call({'from': account.address})
         for idx, pos in enumerate(positions):
-            st.write(f"Position {idx}: EntryPrice={pos[0]}, Amount={w3.fromWei(pos[1], 'ether')} ETH, Sold={pos[2]}")
+            st.write(f"Position {idx}: EntryPrice={pos[0]}, Amount={Web3.from_wei(pos[1], 'ether')} ETH, Sold={pos[2]}")
 
     # Get Sell Target Price
     if st.button("Get Sell Target Price"):
         price = contract.functions.getSellTargetPrice(account.address).call()
-        st.write(f"📊 Sell Target Price: {w3.fromWei(price, 'ether')} USD")
+        st.write(f"📊 Sell Target Price: {Web3.from_wei(price, 'ether')} USD")
 
     # Token Balance
     if st.button("Check Kinetix Token Balance"):
         balance = contract.functions.balanceOf(account.address).call()
-        st.write(f"💰 Token Balance: {w3.fromWei(balance, 'ether')} KX")
+        st.write(f"💰 Token Balance: {Web3.from_wei(balance, 'ether')} KX")
 
     # Withdraw
     position_id = st.number_input("Position ID to withdraw", min_value=0, step=1)
