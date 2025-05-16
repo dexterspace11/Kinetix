@@ -5,7 +5,7 @@ import json
 st.set_page_config(page_title="Kinetix DApp", layout="wide")
 
 # Connect to Ethereum node
-infura_url = "https://sepolia.infura.io/v3/YOUR_INFURA_PROJECT_ID"
+infura_url = "https://sepolia.infura.io/v3/e0fcce634506410b87fc31064eed915a"
 web3 = Web3(Web3.HTTPProvider(infura_url))
 
 st.title("⚡ Kinetix Token DApp")
